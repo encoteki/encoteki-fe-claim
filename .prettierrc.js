@@ -1,5 +1,5 @@
-module.exports = {
-  plugins: [require.resolve('prettier-plugin-tailwindcss')],
+const config = {
+  plugins: ['prettier-plugin-tailwindcss'],
   tailwindStylesheet: './src/styles/globals.css',
   semi: false,
   trailingComma: 'all',
@@ -8,3 +8,5 @@ module.exports = {
   tabWidth: 2,
   endOfLine: 'auto',
 }
+
+export default config
