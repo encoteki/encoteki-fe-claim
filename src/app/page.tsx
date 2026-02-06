@@ -7,7 +7,7 @@ import { useConnection } from 'wagmi' // Ganti useConnection -> useAccount
 import WalletButton from '@/components/button'
 import { ConnectButton, useConnectModal } from '@xellar/kit'
 import Loading from './loading'
-import { checkEligibility as checkEligibilityService } from '@/services/airdrop'
+import { checkEligibility as checkEligibilityService } from '@/services/airdrop.service'
 
 export default function Mint() {
   const { open } = useConnectModal()

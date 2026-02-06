@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import TIGGY from '@/assets/Tiggy_tp.webp'
+import TIGGY from '@/assets/tiggy-tp.webp'
 
 export default function Loading() {
   return (
