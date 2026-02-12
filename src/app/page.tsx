@@ -13,7 +13,7 @@ import { SignInButton } from '@/components/sign-in-btn'
 
 export default function Mint() {
   const { address, isConnected } = useConnection()
-  const { isLoggedIn, isLoading } = useUser()
+  const { isLoggedIn, isLoading: isSessionLoading } = useUser()
 
   // State
   const [loading, setLoading] = useState<boolean>(false)
@@ -51,7 +51,7 @@ export default function Mint() {
     }
   }, [isConnected, address, handleCheckEligibility])
 
-  if (loading || isLoading) return <Loading />
+  if (isSessionLoading) return <Loading />
 
   return (
     <main className="mx-auto flex min-h-screen w-[calc(100%-64px)] max-w-100 flex-col justify-center gap-6">
@@ -70,42 +70,51 @@ export default function Mint() {
           <div className="flex flex-col items-center gap-8 p-6">
             <ConnectButton />
 
-            <div className="space-y-4 text-center">
-              <p className="text-xl font-medium md:text-2xl">
-                You’re{' '}
-                <span
-                  className={`font-semibold ${
-                    eligible ? 'text-(--primary-green)' : 'text-(--primary-red)'
-                  }`}
-                >
-                  {eligible ? 'ELIGIBLE' : 'INELIGIBLE'}
-                </span>
-              </p>
+            {loading ? (
+              <div className="animate-pulse py-10 text-center">
+                <p className="text-xl font-medium text-gray-400">
+                  Checking eligibility...
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4 text-center">
+                <p className="text-xl font-medium md:text-2xl">
+                  You’re{' '}
+                  <span
+                    className={`font-semibold ${
+                      eligible
+                        ? 'text-(--primary-green)'
+                        : 'text-(--primary-red)'
+                    }`}
+                  >
+                    {eligible ? 'ELIGIBLE' : 'INELIGIBLE'}
+                  </span>
+                </p>
 
-              {eligible ? (
-                <div className="space-y-4 px-4">
-                  <p className="text-5xl font-medium md:text-7xl">
-                    {claimCount}
-                  </p>
-                  <p className="text-xl font-medium md:text-2xl">
-                    Encoteki TSB NFT
-                  </p>
-                  <p className="text-neutral-30 text-xs md:text-sm">
-                    Make sure to have ETH in your wallet to cover gas fees
-                  </p>
-                </div>
-              ) : (
-                <div className="px-4">
-                  <p className="text-neutral-30 text-xs md:text-sm">
-                    You are not eligible for this airdrop. Eligibility
-                    requirements must be met to claim rewards. Please check the
-                    criteria and ensure all conditions are fulfilled.
-                  </p>
-                </div>
-              )}
-            </div>
+                {eligible ? (
+                  <div className="space-y-4 px-4">
+                    <p className="text-5xl font-medium md:text-7xl">
+                      {claimCount}
+                    </p>
+                    <p className="text-xl font-medium md:text-2xl">
+                      Encoteki TSB NFT
+                    </p>
+                    <p className="text-neutral-30 text-xs md:text-sm">
+                      Make sure to have ETH in your wallet to cover gas fees
+                    </p>
+                  </div>
+                ) : (
+                  <div className="px-4">
+                    <p className="text-neutral-30 text-xs md:text-sm">
+                      You are not eligible for this airdrop. Eligibility
+                      requirements must be met to claim rewards.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
 
-            {eligible && (
+            {!loading && eligible && (
               <div className="flex w-full flex-col gap-3">
                 <WalletButton label="Claim Now" onClick={() => {}} />
                 <SignInButton />
@@ -130,9 +139,7 @@ export default function Mint() {
 
       <p className="text-center text-sm text-gray-500">
         Any external link other than this related to NFT airdrops or claiming
-        rewards is not associated with Encoteki. Always verify the legitimacy of
-        any external source independently before engaging or sharing sensitive
-        information.
+        rewards is not associated with Encoteki.
       </p>
     </main>
   )
