@@ -3,6 +3,7 @@ import { Outfit } from 'next/font/google'
 import '../styles/globals.css'
 import { Web3Provider } from '@/providers/web3.provider'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -25,6 +26,7 @@ export default function RootLayout({
         <Web3Provider>
           {children}
           <SpeedInsights />
+          <Analytics />
         </Web3Provider>
       </body>
     </html>
