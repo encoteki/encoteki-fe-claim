@@ -112,7 +112,7 @@ export function SignInButton() {
     return (
       <button
         onClick={handleLogout}
-        className="w-full cursor-pointer rounded-4xl bg-white py-3 font-medium text-(--primary-green) duration-300 marker:text-sm hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 md:px-6 md:py-4 md:text-base"
+        className="w-full cursor-pointer rounded-4xl bg-white py-3 font-medium text-(--primary-red) duration-300 marker:text-sm hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 md:px-6 md:py-4 md:text-base"
       >
         Disconnect
       </button>

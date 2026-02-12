@@ -1,24 +1,24 @@
 'use client'
 
 import Loading from '@/app/loading'
-import WalletButton from '@/components/button'
+import { SignInButton } from '@/components/sign-in-btn'
 import Timer from '@/components/timer'
 import { NFT_CONTRACTS } from '@/constants/contract'
 import { useNftOwnership } from '@/hooks/useNftOwnership'
+import { useUser } from '@/hooks/useUser'
 import { getDeals, Partner } from '@/services/deals.service'
-import { ConnectButton, useConnectModal } from '@xellar/kit'
+import { ConnectButton } from '@xellar/kit'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { useConnection, useDisconnect, useChainId } from 'wagmi'
+import { useConnection, useChainId } from 'wagmi'
 
 type Params = Promise<{ id: string }>
 
 export default function ClaimDeals({ params }: { params: Params }) {
-  const { isConnected, address } = useConnection()
+  const { address } = useConnection()
+  const { isLoggedIn } = useUser()
   const chainId = useChainId()
-  const disconnect = useDisconnect()
-  const { open } = useConnectModal()
 
   const targetContract = useMemo(() => {
     if (!chainId) return undefined
@@ -51,39 +51,26 @@ export default function ClaimDeals({ params }: { params: Params }) {
     const init = async () => {
       try {
         const { id } = await params
-
-        console.log('Raw Param ID:', id) // Debugging 1
-
-        // 1. SOLUSI: Normalisasi ke Huruf Besar agar 'epd001' valid
         const normalizedId = id.toUpperCase()
-
-        // 2. Regex tetap Strict, tapi sekarang membandingkan dengan hasil Uppercase
         const strictPattern = /^EPD\d+$/
 
         if (!strictPattern.test(normalizedId)) {
-          console.error('Regex Failed for:', normalizedId) // Debugging 2
           setIs404(true)
           return
         }
 
-        // 3. Parsing angka (EPD001 -> 001 -> 1)
         const numericPart = normalizedId.substring(3)
         const numericId = parseInt(numericPart, 10)
-
-        console.log('Parsed ID:', numericId) // Debugging 3
 
         if (isNaN(numericId)) {
           setIs404(true)
           return
         }
-
         const data = await getDeals(numericId)
 
-        // 4. Cek apakah Data ditemukan di DB
         if (data) {
           setPartner(data)
         } else {
-          console.error('Deal Data Not Found for ID:', numericId) // Debugging 4
           setIs404(true)
         }
       } catch (error) {
@@ -102,16 +89,15 @@ export default function ClaimDeals({ params }: { params: Params }) {
       return
     }
 
-    if (isConnected && isChainSupported && hasNft) {
+    if (isLoggedIn && isChainSupported && hasNft) {
       setEligible(true)
     } else {
       setEligible(false)
     }
-  }, [isConnected, isChainSupported, hasNft, isNftLoading])
+  }, [isLoggedIn, isChainSupported, hasNft, isNftLoading])
 
   if (is404) {
     notFound()
-    return null
   }
 
   if (loading) return <Loading />
@@ -125,7 +111,7 @@ export default function ClaimDeals({ params }: { params: Params }) {
             <Timer />
 
             <div className="flex w-full flex-col items-center gap-4 text-center">
-              {isConnected && (
+              {isLoggedIn && (
                 <div className="flex flex-col gap-2">
                   {!isChainSupported ? (
                     <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-2 text-yellow-700">
@@ -163,21 +149,14 @@ export default function ClaimDeals({ params }: { params: Params }) {
 
               <p className="text-xl font-medium md:text-2xl">{partner?.name}</p>
 
-              {partner.is_offline === false && isConnected && eligible && (
+              {partner.is_offline === false && isLoggedIn && eligible && (
                 <div className="border-opacity-35 w-fit rounded-xl border border-dashed border-(--primary-green) p-3 text-lg font-semibold text-(--primary-green)">
                   {partner?.code}
                 </div>
               )}
             </div>
 
-            {isConnected ? (
-              <WalletButton
-                onClick={() => disconnect.mutate()}
-                label="Disconnect Wallet"
-              />
-            ) : (
-              <WalletButton onClick={open} label="Connect Wallet" />
-            )}
+            <SignInButton />
           </div>
         </section>
       </div>
