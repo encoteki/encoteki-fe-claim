@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Outfit } from 'next/font/google'
 import '../styles/globals.css'
 import { Web3Provider } from '@/providers/web3.provider'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const outfit = Outfit({
   subsets: ['latin'],
@@ -21,7 +22,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${outfit.className} antialiased`}>
-        <Web3Provider>{children}</Web3Provider>
+        <Web3Provider>
+          {children}
+          <SpeedInsights />
+        </Web3Provider>
       </body>
     </html>
   )
