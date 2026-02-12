@@ -3,15 +3,17 @@
 import Image from 'next/image'
 import Logo from '@/assets/logo.webp'
 import { useEffect, useState, useCallback } from 'react'
-import { useConnection } from 'wagmi' // Ganti useConnection -> useAccount
+import { useConnection } from 'wagmi'
 import WalletButton from '@/components/button'
-import { ConnectButton, useConnectModal } from '@xellar/kit'
+import { ConnectButton } from '@xellar/kit'
 import Loading from './loading'
 import { checkEligibility as checkEligibilityService } from '@/services/airdrop.service'
+import { useUser } from '@/hooks/useUser'
+import { SignInButton } from '@/components/sign-in-btn'
 
 export default function Mint() {
-  const { open } = useConnectModal()
   const { address, isConnected } = useConnection()
+  const { isLoggedIn, isLoading } = useUser()
 
   // State
   const [loading, setLoading] = useState<boolean>(false)
@@ -49,7 +51,7 @@ export default function Mint() {
     }
   }, [isConnected, address, handleCheckEligibility])
 
-  if (loading) return <Loading />
+  if (loading || isLoading) return <Loading />
 
   return (
     <main className="mx-auto flex min-h-screen w-[calc(100%-64px)] max-w-100 flex-col justify-center gap-6">
@@ -64,7 +66,7 @@ export default function Mint() {
       </h1>
 
       <div className="h-auto w-full rounded-4xl bg-white drop-shadow-xl md:flex md:flex-col">
-        {isConnected ? (
+        {isLoggedIn ? (
           <div className="flex flex-col items-center gap-8 p-6">
             <ConnectButton />
 
@@ -106,6 +108,7 @@ export default function Mint() {
             {eligible && (
               <div className="flex w-full flex-col gap-3">
                 <WalletButton label="Claim Now" onClick={() => {}} />
+                <SignInButton />
               </div>
             )}
           </div>
@@ -120,8 +123,7 @@ export default function Mint() {
                 Encoteki claim
               </p>
             </div>
-
-            <WalletButton onClick={open} label="Connect Wallet" />
+            <SignInButton />
           </div>
         )}
       </div>
