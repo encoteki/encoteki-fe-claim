@@ -11,6 +11,7 @@ export default function Loading() {
           src={TIGGY}
           width={100}
           height={100}
+          priority
         />
         <p className="text-center text-base font-medium md:text-xl">
           Please wait...

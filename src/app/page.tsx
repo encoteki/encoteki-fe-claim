@@ -7,7 +7,6 @@ import { useConnection } from 'wagmi'
 import WalletButton from '@/components/button'
 import { ConnectButton } from '@xellar/kit'
 import Loading from './loading'
-import { checkEligibility as checkEligibilityService } from '@/services/airdrop.service'
 import { useUser } from '@/hooks/useUser'
 import { SignInButton } from '@/components/sign-in-btn'
 
@@ -23,10 +22,11 @@ export default function Mint() {
   const handleCheckEligibility = useCallback(async (userAddress: string) => {
     setLoading(true)
     try {
-      const data = await checkEligibilityService(userAddress)
+      const res = await fetch(`api/eligibility?address=${userAddress}`)
+      const json = await res.json()
 
-      if (data && data.qty > 0) {
-        setClaimCount(data.qty)
+      if (json.success && json.data) {
+        setClaimCount(1)
         setEligible(true)
       } else {
         setClaimCount(0)
@@ -42,13 +42,15 @@ export default function Mint() {
   }, [])
 
   useEffect(() => {
-    if (isConnected && address) {
-      handleCheckEligibility(address)
-    } else {
+    // State Reset if disconnected
+    if (!isConnected || !address) {
       setEligible(false)
       setClaimCount(0)
       setLoading(false)
+      return
     }
+
+    handleCheckEligibility(address)
   }, [isConnected, address, handleCheckEligibility])
 
   if (isSessionLoading) return <Loading />
@@ -66,7 +68,7 @@ export default function Mint() {
       </h1>
 
       <div className="h-auto w-full rounded-4xl bg-white drop-shadow-xl md:flex md:flex-col">
-        {isLoggedIn ? (
+        {isLoggedIn && address ? (
           <div className="flex flex-col items-center gap-8 p-6">
             <ConnectButton />
 

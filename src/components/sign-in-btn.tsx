@@ -28,7 +28,7 @@ export function SignInButton() {
       const message = new SiweMessage({
         domain: window.location.host,
         address: address,
-        statement: 'Sign in to Encoteki Beta App',
+        statement: 'Sign in to Encoteki Claim App',
         uri: window.location.origin,
         version: '1',
         chainId: chainId,

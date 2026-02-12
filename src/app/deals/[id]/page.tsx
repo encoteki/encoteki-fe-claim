@@ -6,18 +6,18 @@ import Timer from '@/components/timer'
 import { NFT_CONTRACTS } from '@/constants/contract'
 import { useNftOwnership } from '@/hooks/useNftOwnership'
 import { useUser } from '@/hooks/useUser'
-import { getDeals, Partner } from '@/services/deals.service'
+import { Partner } from '@/types/partners.type'
 import { ConnectButton } from '@xellar/kit'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { useConnection, useChainId } from 'wagmi'
+import { useChainId, useConnection } from 'wagmi'
 
 type Params = Promise<{ id: string }>
 
 export default function ClaimDeals({ params }: { params: Params }) {
   const { address } = useConnection()
-  const { isLoggedIn } = useUser()
+  const { isLoggedIn, isLoading: isSessionLoading } = useUser()
   const chainId = useChainId()
 
   const targetContract = useMemo(() => {
@@ -36,17 +36,13 @@ export default function ClaimDeals({ params }: { params: Params }) {
   const [is404, setIs404] = useState<boolean>(false)
   const [eligible, setEligible] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
-  const [partner, setPartner] = useState<Partner>({
-    id: 0,
-    name: '',
-    description: '',
-    offer: '',
-    tnc: '',
-    image: '',
-    code: '',
-    is_offline: undefined,
-  })
 
+  // State Partner
+  const [partner, setPartner] = useState<Partner | null>(null)
+  const [partnerId, setPartnerId] = useState<number | null>(null)
+  const [eligibleCode, setEligibleCode] = useState<string>('')
+
+  // 1. Initial Load
   useEffect(() => {
     const init = async () => {
       try {
@@ -66,10 +62,15 @@ export default function ClaimDeals({ params }: { params: Params }) {
           setIs404(true)
           return
         }
-        const data = await getDeals(numericId)
 
-        if (data) {
-          setPartner(data)
+        setPartnerId(numericId)
+        const res = await fetch(`/api/partners?id=${numericId}`)
+        const json = await res.json()
+
+        console.dir(json)
+
+        if (json.success && json.data) {
+          setPartner(json.data)
         } else {
           setIs404(true)
         }
@@ -83,36 +84,83 @@ export default function ClaimDeals({ params }: { params: Params }) {
     init()
   }, [params])
 
+  // 2. Eligibility Check
   useEffect(() => {
-    if (isNftLoading) {
+    if (!isLoggedIn || !address) {
       setEligible(false)
+      setEligibleCode('')
       return
     }
 
-    if (isLoggedIn && isChainSupported && hasNft) {
-      setEligible(true)
-    } else {
-      setEligible(false)
+    const checkEligibility = async () => {
+      if (isNftLoading) return
+
+      if (!isChainSupported || !hasNft || !partnerId) {
+        setEligible(false)
+        setEligibleCode('')
+        return
+      }
+
+      try {
+        if (!partner?.is_offline) {
+          const res = await fetch(`/api/deals?id=${partnerId}`)
+          const json = await res.json()
+          if (json.success && json.data) {
+            setEligible(true)
+            setEligibleCode(json.data.code || 'CODE-REDEEMED')
+          } else {
+            setEligible(false)
+          }
+        } else {
+          setEligible(true)
+        }
+      } catch (error) {
+        console.error('Failed to fetch code:', error)
+        setEligible(false)
+      }
     }
-  }, [isLoggedIn, isChainSupported, hasNft, isNftLoading])
 
-  if (is404) {
-    notFound()
-  }
+    checkEligibility()
+  }, [
+    isLoggedIn,
+    address,
+    isChainSupported,
+    hasNft,
+    isNftLoading,
+    partnerId,
+    partner?.is_offline,
+  ])
 
-  if (loading) return <Loading />
+  // --- Render Logic ---
+  if (is404) notFound()
+  if (loading || isSessionLoading) return <Loading />
+  if (!partner) return null
 
   return (
     <main className="mx-auto flex min-h-screen w-[calc(100%-64px)] max-w-100 flex-col justify-center gap-6">
       <div className="md:flex md:h-125 md:flex-col md:justify-center">
         <section className="h-auto w-full rounded-4xl bg-white drop-shadow-xl">
           <div className="flex flex-col items-center gap-6 p-6">
-            <ConnectButton />
+            {isLoggedIn && <ConnectButton />}
             <Timer />
 
             <div className="flex w-full flex-col items-center gap-4 text-center">
+              {partner.image && (
+                <div className="relative h-24 w-24 overflow-hidden rounded-full border border-gray-100">
+                  <Image
+                    src={partner.image}
+                    alt="Partner Image"
+                    fill
+                    className="object-cover"
+                    loading="eager"
+                  />
+                </div>
+              )}
+
+              <p className="text-xl font-medium md:text-2xl">{partner.name}</p>
+
               {isLoggedIn && (
-                <div className="flex flex-col gap-2">
+                <div className="flex w-full flex-col items-center gap-2">
                   {!isChainSupported ? (
                     <div className="rounded-lg border border-yellow-200 bg-yellow-50 px-4 py-2 text-yellow-700">
                       <p className="text-sm font-bold">Unsupported Network</p>
@@ -120,38 +168,44 @@ export default function ClaimDeals({ params }: { params: Params }) {
                   ) : isNftLoading ? (
                     <div className="flex flex-col items-center gap-2 text-gray-500">
                       <span className="loading loading-spinner loading-sm"></span>
-                      <p className="animate-pulse text-sm">Please wait...</p>
+                      <p className="animate-pulse text-sm">
+                        Checking ownership...
+                      </p>
                     </div>
                   ) : (
-                    <p className="text-xl font-medium md:text-2xl">
-                      You’re{' '}
-                      <span
-                        className={`font-semibold ${
-                          eligible
-                            ? 'text-(--primary-green)'
-                            : 'text-(--primary-red)'
-                        }`}
-                      >
-                        {eligible ? 'ELIGIBLE' : 'INELIGIBLE'}
-                      </span>
-                    </p>
+                    <>
+                      {/* --- OFFLINE PARTNER LOGIC --- */}
+                      {partner.is_offline ? (
+                        <p className="text-xl font-medium md:text-2xl">
+                          You’re{' '}
+                          <span
+                            className={`font-semibold ${eligible ? 'text-(--primary-green)' : 'text-(--primary-red)'}`}
+                          >
+                            {eligible ? 'ELIGIBLE' : 'INELIGIBLE'}
+                          </span>
+                        </p>
+                      ) : /* --- ONLINE PARTNER LOGIC --- */
+                      eligible ? (
+                        <div className="animate-in fade-in zoom-in mt-2 flex flex-col items-center gap-2 duration-300">
+                          <p className="text-sm text-gray-500">
+                            Your Voucher Code:
+                          </p>
+                          <div className="border-opacity-35 w-fit cursor-pointer rounded-xl border border-dashed border-(--primary-green) bg-green-50 px-6 py-3 text-lg font-bold text-(--primary-green) transition-colors select-all hover:bg-green-100">
+                            {eligibleCode}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center gap-1">
+                          <p className="text-xl font-medium md:text-2xl">
+                            You’re{' '}
+                            <span className="font-semibold text-(--primary-red)">
+                              INELIGIBLE
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </>
                   )}
-                </div>
-              )}
-
-              <Image
-                src={partner.image}
-                alt="Partner Image"
-                width={100}
-                height={100}
-                loading="eager"
-              />
-
-              <p className="text-xl font-medium md:text-2xl">{partner?.name}</p>
-
-              {partner.is_offline === false && isLoggedIn && eligible && (
-                <div className="border-opacity-35 w-fit rounded-xl border border-dashed border-(--primary-green) p-3 text-lg font-semibold text-(--primary-green)">
-                  {partner?.code}
                 </div>
               )}
             </div>
