@@ -2,7 +2,13 @@ import { Partner } from '@/types/partners.type'
 import Image from 'next/image'
 import Link from 'next/link'
 
-export default function CouponCard({ partner }: { partner: Partner }) {
+export default function CouponCard({
+  partner,
+  priority = false,
+}: {
+  partner: Partner
+  priority?: boolean
+}) {
   return (
     <Link
       href={`/deals/EPD${partner.id}`}
@@ -16,6 +22,8 @@ export default function CouponCard({ partner }: { partner: Partner }) {
                 src={partner.image}
                 alt={partner.name}
                 fill
+                sizes="(min-width: 1280px) 25vw, (min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                priority={priority}
                 className="object-contain drop-shadow-sm transition-transform duration-300 group-hover:scale-105"
               />
             </div>

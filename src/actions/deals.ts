@@ -7,6 +7,10 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function getDeal(id: number) {
   try {
+    if (!Number.isInteger(id) || id < 1 || id > 1_000_000) {
+      return { success: false, message: 'Invalid partner id' }
+    }
+
     const session = await getIronSession<SessionData>(
       await cookies(),
       sessionOptions,

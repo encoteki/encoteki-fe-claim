@@ -1,8 +1,15 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { getAllPartners } from '@/actions/partners'
 import Logo from '@/assets/logo.webp'
 import CouponCard from '@/components/deals/coupon-card'
+
+export const metadata: Metadata = {
+  title: 'Partner Deals | Encoteki',
+  description:
+    'Browse exclusive deals and discounts from Encoteki partners. Connect your wallet to unlock voucher codes.',
+}
 
 type SearchParams = Promise<{ page?: string }>
 
@@ -130,8 +137,12 @@ export default async function DealsPage({
       {result.success && partners.length > 0 && (
         <>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6 xl:grid-cols-4">
-            {partners.map((partner) => (
-              <CouponCard key={partner.id} partner={partner} />
+            {partners.map((partner, index) => (
+              <CouponCard
+                key={partner.id}
+                partner={partner}
+                priority={index < 4}
+              />
             ))}
           </div>
 

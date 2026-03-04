@@ -13,9 +13,6 @@ export default function Loading() {
           height={100}
           priority
         />
-        <p className="text-center text-base font-medium md:text-xl">
-          Please wait...
-        </p>
       </div>
     </div>
   )

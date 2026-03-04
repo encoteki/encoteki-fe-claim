@@ -1,6 +1,8 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/client'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+
+const EVM_ADDRESS_RE = /^0x[a-fA-F0-9]{40}$/
 
 export async function checkEligibility(address: string) {
   try {
@@ -8,8 +10,11 @@ export async function checkEligibility(address: string) {
       return { success: false, message: 'Address is required' }
     }
 
-    const supabase = createClient()
-    const { data, error } = await supabase
+    if (!EVM_ADDRESS_RE.test(address)) {
+      return { success: false, message: 'Invalid address format' }
+    }
+
+    const { data, error } = await supabaseAdmin
       .from('eligibility')
       .select('address')
       .eq('address', address)

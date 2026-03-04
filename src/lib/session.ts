@@ -19,5 +19,7 @@ export const sessionOptions: SessionOptions = {
   cookieName: 'siwe-encoteki-claim',
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    sameSite: 'lax',
   },
 }
