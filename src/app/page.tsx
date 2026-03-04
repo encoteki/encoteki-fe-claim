@@ -9,6 +9,7 @@ import { ConnectButton } from '@xellar/kit'
 import Loading from './loading'
 import { useUser } from '@/hooks/useUser'
 import { SignInButton } from '@/components/sign-in-btn'
+import { checkEligibility } from '@/actions/eligibility'
 
 export default function Mint() {
   const { address, isConnected } = useConnection()
@@ -22,8 +23,7 @@ export default function Mint() {
   const handleCheckEligibility = useCallback(async (userAddress: string) => {
     setLoading(true)
     try {
-      const res = await fetch(`api/eligibility?address=${userAddress}`)
-      const json = await res.json()
+      const json = await checkEligibility(userAddress)
 
       if (json.success && json.data) {
         setClaimCount(1)

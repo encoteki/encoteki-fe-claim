@@ -7,6 +7,8 @@ import { NFT_CONTRACTS } from '@/constants/contract'
 import { useNftOwnership } from '@/hooks/useNftOwnership'
 import { useUser } from '@/hooks/useUser'
 import { Partner } from '@/types/partners.type'
+import { getPartner } from '@/actions/partners'
+import { getDeal } from '@/actions/deals'
 import { ConnectButton } from '@xellar/kit'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
@@ -64,10 +66,7 @@ export default function ClaimDeals({ params }: { params: Params }) {
         }
 
         setPartnerId(numericId)
-        const res = await fetch(`/api/partners?id=${numericId}`)
-        const json = await res.json()
-
-        console.dir(json)
+        const json = await getPartner(numericId)
 
         if (json.success && json.data) {
           setPartner(json.data)
@@ -103,8 +102,7 @@ export default function ClaimDeals({ params }: { params: Params }) {
 
       try {
         if (!partner?.is_offline) {
-          const res = await fetch(`/api/deals?id=${partnerId}`)
-          const json = await res.json()
+          const json = await getDeal(partnerId)
           if (json.success && json.data) {
             setEligible(true)
             setEligibleCode(json.data.code || 'CODE-REDEEMED')

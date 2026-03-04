@@ -1,10 +1,13 @@
 import { SessionOptions } from 'iron-session'
 
+export const SESSION_DURATION_MS = 60 * 60 * 1000 // 1 hour
+
 export interface SessionData {
   nonce?: string
   siwe?: {
     address: string
   }
+  createdAt?: number
 }
 
 if (!process.env.IRON_SESSION_PASSWORD) {
