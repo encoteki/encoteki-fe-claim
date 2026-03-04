@@ -9,7 +9,6 @@ import { useUser } from '@/hooks/useUser'
 import { Partner } from '@/types/partners.type'
 import { getPartner } from '@/actions/partners'
 import { getDeal } from '@/actions/deals'
-import { ConnectButton } from '@xellar/kit'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
@@ -139,7 +138,6 @@ export default function ClaimDeals({ params }: { params: Params }) {
       <div className="md:flex md:h-125 md:flex-col md:justify-center">
         <section className="h-auto w-full rounded-4xl bg-white drop-shadow-xl">
           <div className="flex flex-col items-center gap-6 p-6">
-            {isLoggedIn && <ConnectButton />}
             <Timer />
 
             <div className="flex w-full flex-col items-center gap-4 text-center">
