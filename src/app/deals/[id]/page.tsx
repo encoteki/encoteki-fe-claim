@@ -11,6 +11,7 @@ import { getPartner } from '@/actions/partners'
 import { getDeal } from '@/actions/deals'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
+import { Copy, Check } from 'lucide-react'
 import { useEffect, useState, useMemo } from 'react'
 import { useChainId, useConnection } from 'wagmi'
 
@@ -34,14 +35,21 @@ export default function ClaimDeals({ params }: { params: Params }) {
     chainId,
   )
 
-  const [is404, setIs404] = useState<boolean>(false)
   const [eligible, setEligible] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(true)
+  const [copied, setCopied] = useState<boolean>(false)
 
   // State Partner
   const [partner, setPartner] = useState<Partner | null>(null)
   const [partnerId, setPartnerId] = useState<number | null>(null)
   const [eligibleCode, setEligibleCode] = useState<string>('')
+
+  const handleCopy = async () => {
+    if (!eligibleCode || copied) return
+    await navigator.clipboard.writeText(eligibleCode)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   // 1. Initial Load
   useEffect(() => {
@@ -52,7 +60,6 @@ export default function ClaimDeals({ params }: { params: Params }) {
         const strictPattern = /^EPD\d+$/
 
         if (!strictPattern.test(normalizedId)) {
-          setIs404(true)
           return
         }
 
@@ -60,21 +67,17 @@ export default function ClaimDeals({ params }: { params: Params }) {
         const numericId = parseInt(numericPart, 10)
 
         if (isNaN(numericId)) {
-          setIs404(true)
           return
         }
 
         setPartnerId(numericId)
-        const json = await getPartner(numericId)
+        const data = await getPartner(numericId)
 
-        if (json.success && json.data) {
-          setPartner(json.data)
-        } else {
-          setIs404(true)
+        if (data.success && data.data) {
+          setPartner(data.data)
         }
       } catch (error) {
         console.error(error)
-        setIs404(true)
       } finally {
         setLoading(false)
       }
@@ -129,9 +132,8 @@ export default function ClaimDeals({ params }: { params: Params }) {
   ])
 
   // --- Render Logic ---
-  if (is404) notFound()
   if (loading || isSessionLoading) return <Loading />
-  if (!partner) return null
+  if (!partner) notFound()
 
   return (
     <main className="mx-auto flex min-h-screen w-[calc(100%-64px)] max-w-100 flex-col justify-center gap-6">
@@ -186,8 +188,25 @@ export default function ClaimDeals({ params }: { params: Params }) {
                           <p className="text-sm text-gray-500">
                             Your Voucher Code:
                           </p>
-                          <div className="border-opacity-35 w-fit cursor-pointer rounded-xl border border-dashed border-(--primary-green) bg-green-50 px-6 py-3 text-lg font-bold text-(--primary-green) transition-colors select-all hover:bg-green-100">
-                            {eligibleCode}
+                          <div className="group relative w-fit">
+                            <div
+                              onClick={handleCopy}
+                              className="border-opacity-35 flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-(--primary-green) bg-green-50 px-6 py-3 text-lg font-bold text-(--primary-green) transition-colors select-all hover:bg-green-100"
+                            >
+                              {eligibleCode}
+                              <span className="shrink-0">
+                                {copied ? (
+                                  <Check size={18} className="text-green-600" />
+                                ) : (
+                                  <Copy size={18} />
+                                )}
+                              </span>
+                            </div>
+                            {!copied && (
+                              <span className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-gray-800 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                Click to copy
+                              </span>
+                            )}
                           </div>
                         </div>
                       ) : (

@@ -49,7 +49,7 @@ export async function getPartner(id: number) {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('partners')
-      .select('id, name, offer, description, tnc, code, image, is_offline')
+      .select('id, name, offer, description, tnc, image, is_offline')
       .eq('id', id)
       .single()
 
